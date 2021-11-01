@@ -1,0 +1,55 @@
+service:
+  name: "ignitecusertodos"
+
+plugins:
+  - serverless-webpack
+  - serverless-offline
+  - serverless-dynamodb-local
+
+custom:
+  webpack:
+    webpackConfig: ./webpack.config.js
+    includeModules: true
+  dynamodb:
+    stages:
+      - dev
+      - local
+    start:
+      port: 8000
+      inMemory: true
+      migrate: true
+
+provider:
+  name: aws
+
+functions:
+  createUserTodos:
+    handler: src/functions/createUserTodos.handle
+    events:
+      - http:
+          path: /todos/{userId}
+          method: POST
+          cors: true
+  getUserTodos:
+    handler: src/functions/getUserTodos.handle
+    events:
+      - http:
+          path: /todos/{userId}
+          method: GET
+          cors: true
+
+resources:
+  Resources:
+    dbUsersTodos:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: users_todos
+        ProvisionedThroughput:
+          ReadCapacityUnits: 5
+          WriteCapacityUnits: 5
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
